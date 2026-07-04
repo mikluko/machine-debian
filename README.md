@@ -15,13 +15,14 @@ Published as `ghcr.io/mikluko/machine-debian`.
 
 ## Tags
 
-Every build publishes a moving tag and an immutable version `EPOCH.BUILD`.
-`BUILD` is the CI run number; `EPOCH` starts at `0` and is bumped by hand on a
-breaking base change. Pin the version for reproducibility.
+The base and each overlay are separate GHCR packages. Every build publishes a
+moving `latest` tag and an immutable version `EPOCH.BUILD` per package. `BUILD`
+is the CI run number; `EPOCH` starts at `0` and is bumped by hand on a breaking
+base change. Pin the version for reproducibility.
 
-- base: `latest`, `0.<build>`
-- kind: `kind`, `kind-0.<build>`
-- jdk25: `jdk25`, `jdk25-0.<build>`
+- base: `ghcr.io/mikluko/machine-debian` — `latest`, `0.<build>`
+- kind: `ghcr.io/mikluko/machine-debian/kind` — `latest`, `0.<build>`
+- jdk25: `ghcr.io/mikluko/machine-debian/jdk25` — `latest`, `0.<build>`
 
 ## What's in the base
 
@@ -139,20 +140,29 @@ container image delete machine-myproject    # optional: drop the local image too
 ## Overlays
 
 Common tool layers ship as named overlay Dockerfiles here. Each is `FROM
-ghcr.io/mikluko/machine-debian` and inherits the base init/entrypoint. Build one
-with `-f`, then create a machine from the tag:
+ghcr.io/mikluko/machine-debian`, inherits the base init/entrypoint, and CI
+publishes it as its own GHCR sub-package (see [Tags](#tags)).
+
+- [`kind.Dockerfile`](kind.Dockerfile) → `ghcr.io/mikluko/machine-debian/kind` —
+  `kind` + Podman as its container provider
+  (`KIND_EXPERIMENTAL_PROVIDER=podman`).
+- [`jdk25.Dockerfile`](jdk25.Dockerfile) → `ghcr.io/mikluko/machine-debian/jdk25`
+  — OpenJDK 25 (headless) + Maven (from Debian trixie-security) + Docker Engine.
+
+Create a machine straight from a published overlay, no local build:
+
+```bash
+container machine create ghcr.io/mikluko/machine-debian/kind \
+  --name myproject --cpus 6 --memory 16G
+```
+
+Or build an overlay Dockerfile locally (e.g. to pin a version or tweak it):
 
 ```bash
 container build -t machine-myproject -f kind.Dockerfile .
 container machine create machine-myproject --name myproject --cpus 6 --memory 16G
 ```
 
-- [`kind.Dockerfile`](kind.Dockerfile) — `kind` + Podman as its container
-  provider (`KIND_EXPERIMENTAL_PROVIDER=podman`).
-- [`jdk25.Dockerfile`](jdk25.Dockerfile) — OpenJDK 25 (headless) + Maven (from
-  Debian trixie-security) + Docker Engine.
-
 A project needing several overlays composes them in its own Dockerfile: start
 `FROM ghcr.io/mikluko/machine-debian` and copy in the `RUN` blocks it wants
-(Docker images take a single base, so overlays are combined by hand, not
-chained).
+(a single base per image, so overlays are combined by hand, not chained).
