@@ -1,4 +1,4 @@
-name: base-bump
+name: update
 
 # Daily: pin the base image to Debian's newest trixie-YYYYMMDD snapshot tag,
 # so rebuilds are reproducible and track the latest published snapshot.
