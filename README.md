@@ -99,16 +99,19 @@ container machine ls
 
 ### Enter / run in a machine
 
+The host-matched default user can't reach the root-owned Docker socket, so
+`docker` fails. Fix it by joining the `docker` group with `--gid` (least
+privilege; avoids the root home-mount hazard). Detect the gid inside the machine
+— `getent group docker` needs no root:
+
 ```bash
-container machine run -n myproject --root                 # interactive root shell
-container machine run -n myproject --root -- <cmd> [args] # one-off command
+gid=$(container machine run -n myproject -- getent group docker | cut -d: -f3)
+container machine run -n myproject --gid "$gid" -t -i            # interactive shell
+container machine run -n myproject --gid "$gid" -- <cmd> [args]  # one-off command
 ```
 
-**Always pass `--root`** — for the interactive shell too, not just builds.
-Without it `run` uses the host-matched user, who can't reach the Docker socket
-or use overlay storage, so Docker/Podman break. There is no machine-level
-default-user setting, so `--root` goes on every `run` (see [Gotchas](#gotchas)).
-`run` boots the machine if it is stopped.
+There is no machine-level default-user setting, so pass `--gid` on every `run`
+(see [Gotchas](#gotchas)). `run` boots the machine if it is stopped.
 
 ### Update a project machine
 
@@ -137,13 +140,14 @@ container image delete machine-myproject    # optional: drop the local image too
 
 ## Gotchas
 
-- **Always run as root** (`container machine run --root`), not just for builds.
-  The host-matched default user can't reach the root-owned Docker socket, and
-  container storage lands on the virtiofs home mount, which can't do the
-  ownership ops overlay needs (`lchown: invalid argument`). As root, Docker/Podman
-  reach their daemon/storage under machine-local `/var/lib/docker` (or
-  `/var/lib/containers`). There is no machine-level default-user setting, so pass
-  `--root` on every `run`.
+- **Use the `docker` group, not `--root`.** `run` defaults to the host-matched
+  user, who can't reach the root-owned Docker socket. Join the group with
+  `--gid` (detect it via `getent group docker`, no root needed). Docker's daemon
+  runs as root and stores under machine-local `/var/lib/docker`, so the group is
+  enough — no rootless/home-mount storage problem. There is no machine-level
+  default-user setting, so pass `--gid` on every `run`. (Rootless Podman is
+  daemonless and does hit the home-mount storage issue below — run it as root or
+  point its storage at a machine-local path.)
 - **Your host `$HOME` is mounted read-write** into the machine at the same path,
   and `run` defaults its working directory into it. A relative write inside the
   machine can hit your real host files. Build and scratch in machine-local paths

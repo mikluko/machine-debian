@@ -15,8 +15,9 @@ model, storage, and networking differ. Two distinct models:
   systemd sandbox. See the `mikluko/machine-debian` workflow below.
 
 **Run `container` commands unsandboxed.** They need the host VM + network; a
-sandbox blocks them (`Operation not permitted`). And with these images, **always
-`run --root`** — see [run](#run-user-and-env).
+sandbox blocks them (`Operation not permitted`). And to use Docker inside a
+machine, `run` with the **`docker` group** (`--gid`), not `--root` — see
+[run](#run-user-and-env).
 
 ## container machine
 
@@ -26,7 +27,7 @@ needed), or `run -- true` to boot without a foreground command.
 
 ```
 container machine create <image> --name <n> --cpus N --memory 16G
-container machine run -n <n> --root [-t -i] [-- cmd ...]     # boots if stopped; --root: see run notes
+container machine run -n <n> --gid <docker-gid> [-t -i] [-- cmd ...]   # boots if stopped; gid: see run notes
 container machine set -n <n> cpus=6 memory=16G              # applies after restart
 container machine stop <n>
 container machine delete <n>
@@ -43,12 +44,23 @@ container machine ls
 
 ### run: user and env
 
-- **Always pass `--root`** with these images — for the interactive shell too,
-  not just builds. `run` defaults to the host-matched user, who cannot reach the
-  root-owned Docker socket or use overlay storage, so Docker/Podman silently
-  break. There is **no machine-level default-user setting** (`machine set` only
-  does cpus/memory/home-mount), so `--root` must be on *every* `run`:
-  `container machine run -n <n> --root [-t -i] [-- cmd]`.
+- `run` defaults to the **host-matched user**, who cannot reach the root-owned
+  Docker socket (`/var/run/docker.sock`, `root:docker`), so `docker` fails.
+- **Fix it with the `docker` group, not `--root`.** Add the group via `--gid`
+  and keep least privilege (root also has the home-mount write hazard below).
+  Detect the gid inside the machine — `getent group docker` needs no root:
+
+  ```
+  gid=$(container machine run -n <n> -- getent group docker | cut -d: -f3)
+  container machine run -n <n> --gid "$gid" [-t -i] [-- cmd]
+  ```
+
+  Docker's daemon runs as root and stores under machine-local `/var/lib/docker`,
+  so joining the group is enough — no rootless/home-mount storage problem.
+- There is **no machine-level default-user setting** (`machine set` only does
+  cpus/memory/home-mount), so pass `--gid` on every `run`.
+- Rootless **Podman** (kind overlay) is daemonless — no socket group to join;
+  its storage caveat is in [Gotchas](#gotchas-learned-the-hard-way).
 - No command → interactive login shell (add `-t -i`).
 - `-e KEY[=VAL]` passes env; host env like `SSH_AUTH_SOCK` propagates.
 - `$HOME` is mounted (see Gotchas).
@@ -69,11 +81,14 @@ and speed apt rebuilds.
   (`/root`, `/var/tmp`), never the home mount. `--home-mount ro|none` hardens it.
 - **Machines have no `--mount`/`--volume`/`--ssh`.** Only `--home-mount ro|rw|none`.
   Arbitrary bind mounts and explicit socket forwarding are unavailable.
-- **Rootless container builds fail on the home mount.** Rootless podman/buildah
-  storage lands on the virtiofs home mount, which lacks the ownership ops overlay
-  needs: `lchown /etc/gshadow: invalid argument` / "potentially insufficient
-  UIDs". Fix: run builds as `--root` so storage uses machine-local
-  `/var/lib/docker` (or `/var/lib/containers`).
+- **Rootless container storage fails on the home mount.** Rootless
+  podman/buildah storage lands on the virtiofs home mount, which lacks the
+  ownership ops overlay needs: `lchown /etc/gshadow: invalid argument` /
+  "potentially insufficient UIDs". Docker sidesteps this — its daemon runs as
+  root and stores under machine-local `/var/lib/docker`, so joining the `docker`
+  group (see [run](#run-user-and-env)) is enough. Rootless Podman does hit it:
+  run it as root, or point its storage at a machine-local path (not the home
+  mount).
 - **`machine run` prints a spurious first line** `Error: The operation couldn't
   be completed. Operation not supported by device` — harmless; the command still
   runs. Filter with `grep -vE 'Operation not supported'`.
