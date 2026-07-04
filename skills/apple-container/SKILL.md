@@ -1,6 +1,6 @@
 ---
 name: apple-container
-description: Apple `container` CLI (macOS containerization) - running containers and persistent Linux VMs via `container machine`, building images, and the gotchas around home mounts, rootless storage, SSH agent forwarding, and systemd/Docker inside the VM. Use when working with the `container` command, `container machine`, or the `mikluko/machine-debian` base image and project machines.
+description: Create, boot, enter, or run Apple `container` machines (macOS containerization) — persistent Linux VMs via `container machine` — plus building images and the gotchas around running as root, home mounts, rootless storage, SSH agent forwarding, and systemd/Docker inside the VM. Use when the user wants to spin up / create / use a `container machine`, works with the `container` CLI, or uses the `mikluko/machine-debian` base image and project machines.
 allowed-tools: [Read, Write, Edit, Bash]
 ---
 
@@ -14,6 +14,10 @@ model, storage, and networking differ. Two distinct models:
 - `container machine` — long-lived Linux VMs. Use this for a persistent
   systemd sandbox. See the `mikluko/machine-debian` workflow below.
 
+**Run `container` commands unsandboxed.** They need the host VM + network; a
+sandbox blocks them (`Operation not permitted`). And with these images, **always
+`run --root`** — see [run](#run-user-and-env).
+
 ## container machine
 
 Subcommands: `create delete inspect list logs run set set-default stop`.
@@ -22,7 +26,7 @@ needed), or `run -- true` to boot without a foreground command.
 
 ```
 container machine create <image> --name <n> --cpus N --memory 16G
-container machine run -n <n> [--root] [-t -i] [-- cmd ...]   # boots if stopped
+container machine run -n <n> --root [-t -i] [-- cmd ...]     # boots if stopped; --root: see run notes
 container machine set -n <n> cpus=6 memory=16G              # applies after restart
 container machine stop <n>
 container machine delete <n>
@@ -39,10 +43,15 @@ container machine ls
 
 ### run: user and env
 
-- Default runs as the **host-matched user** with `$HOME` mounted (see below).
-- `--root` runs as root. **Required for builds** (see rootless gotcha).
+- **Always pass `--root`** with these images — for the interactive shell too,
+  not just builds. `run` defaults to the host-matched user, who cannot reach the
+  root-owned Docker socket or use overlay storage, so Docker/Podman silently
+  break. There is **no machine-level default-user setting** (`machine set` only
+  does cpus/memory/home-mount), so `--root` must be on *every* `run`:
+  `container machine run -n <n> --root [-t -i] [-- cmd]`.
 - No command → interactive login shell (add `-t -i`).
 - `-e KEY[=VAL]` passes env; host env like `SSH_AUTH_SOCK` propagates.
+- `$HOME` is mounted (see Gotchas).
 
 ## Building images
 

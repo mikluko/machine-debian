@@ -104,8 +104,11 @@ container machine run -n myproject --root                 # interactive root she
 container machine run -n myproject --root -- <cmd> [args] # one-off command
 ```
 
-`--root` is required for container builds inside the machine (see
-[Gotchas](#gotchas)). `run` boots the machine if it is stopped.
+**Always pass `--root`** — for the interactive shell too, not just builds.
+Without it `run` uses the host-matched user, who can't reach the Docker socket
+or use overlay storage, so Docker/Podman break. There is no machine-level
+default-user setting, so `--root` goes on every `run` (see [Gotchas](#gotchas)).
+`run` boots the machine if it is stopped.
 
 ### Update a project machine
 
@@ -134,11 +137,13 @@ container image delete machine-myproject    # optional: drop the local image too
 
 ## Gotchas
 
-- **Builds must run as root.** `container machine run --root`. As the
-  host-matched user, container storage lands on the virtiofs home mount, which
-  cannot do the ownership ops overlay needs (`lchown: invalid argument`). As
-  root it uses machine-local storage (`/var/lib/docker` for Docker,
-  `/var/lib/containers` for Podman).
+- **Always run as root** (`container machine run --root`), not just for builds.
+  The host-matched default user can't reach the root-owned Docker socket, and
+  container storage lands on the virtiofs home mount, which can't do the
+  ownership ops overlay needs (`lchown: invalid argument`). As root, Docker/Podman
+  reach their daemon/storage under machine-local `/var/lib/docker` (or
+  `/var/lib/containers`). There is no machine-level default-user setting, so pass
+  `--root` on every `run`.
 - **Your host `$HOME` is mounted read-write** into the machine at the same path,
   and `run` defaults its working directory into it. A relative write inside the
   machine can hit your real host files. Build and scratch in machine-local paths
