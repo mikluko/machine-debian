@@ -3,10 +3,9 @@ name: base-bump
 # Daily: pin the base image to Debian's newest trixie-YYYYMMDD snapshot tag,
 # so rebuilds are reproducible and track the latest published snapshot.
 #
-# Pushes with a PAT (secret BASE_BUMP_TOKEN) so the resulting commit triggers
-# the build workflow. A push made with the default GITHUB_TOKEN would NOT
-# trigger other workflows. Create a fine-grained PAT with Contents: read/write
-# on this repo and store it as BASE_BUMP_TOKEN.
+# The commit is pushed with the default GITHUB_TOKEN, which cannot trigger
+# other workflows on push. Instead the build workflow chains off this one via
+# `workflow_run`, so no PAT is needed.
 
 on:
   schedule:
@@ -14,15 +13,13 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   bump:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-        with:
-          token: ${{ secrets.BASE_BUMP_TOKEN }}
 
       - name: Resolve newest trixie date tag
         id: tag

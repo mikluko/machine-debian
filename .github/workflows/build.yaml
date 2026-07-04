@@ -10,9 +10,10 @@ on:
       - Dockerfile
       - "*.Dockerfile"
       - .github/workflows/build.yaml
-  schedule:
-    # Weekly rebuild to pick up Debian security updates.
-    - cron: "0 6 * * 1"
+  workflow_run:
+    # Rebuild after the daily base-bump commits a new Debian snapshot pin.
+    workflows: [base-bump]
+    types: [completed]
   workflow_dispatch:
 
 # Serialize builds: a new run queues behind the in-progress one instead of
@@ -34,6 +35,8 @@ env:
 jobs:
   base:
     runs-on: ubuntu-24.04-arm
+    # When chained from base-bump, only build if that run succeeded.
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-buildx-action@v4
