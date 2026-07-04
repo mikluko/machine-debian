@@ -28,14 +28,15 @@ base change. Pin the version for reproducibility.
 
 `Dockerfile`'s `FROM` tracks a dated Debian snapshot (`debian:trixie-YYYYMMDD`),
 not the floating `trixie`. A daily workflow
-([`base-bump.yaml`](.github/workflows/base-bump.yaml)) resolves Debian's newest
-`trixie-YYYYMMDD` tag, rewrites the pin, and commits. Reproducible rebuilds,
-still tracking upstream snapshots.
+([`update.yaml`](.github/workflows/update.yaml)) resolves Debian's newest
+`trixie-YYYYMMDD` tag, rewrites the pin, and commits only when it changes. That
+commit triggers the build, so rebuilds happen only on a new snapshot, not daily.
 
-The build workflow chains off the bump via `workflow_run`, so a rebuild follows
-each daily bump with no PAT required (a commit pushed with the default
-`GITHUB_TOKEN` cannot trigger `on: push`, but `workflow_run` fires regardless).
-No secrets to configure.
+Setup: the update commits with a PAT so its push triggers the build workflow (a
+push made with the default `GITHUB_TOKEN` cannot). Create a fine-grained PAT
+with Contents: read/write on this repo and store it as the `GH_PAT` secret.
+Secret names may not start with the reserved `GITHUB_` prefix, so `GH_PAT`, not
+`GITHUB_PAT`.
 
 ## What's in the base
 
