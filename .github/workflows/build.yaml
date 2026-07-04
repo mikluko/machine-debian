@@ -15,6 +15,12 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch:
 
+# Serialize builds: a new run queues behind the in-progress one instead of
+# cancelling it, so pushes publish in order.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
   packages: write
