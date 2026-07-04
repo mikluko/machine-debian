@@ -24,6 +24,19 @@ base change. Pin the version for reproducibility.
 - kind: `ghcr.io/mikluko/machine-debian/kind` — `latest`, `0.<build>`
 - jdk25: `ghcr.io/mikluko/machine-debian/jdk25` — `latest`, `0.<build>`
 
+## Base pinning
+
+`Dockerfile`'s `FROM` tracks a dated Debian snapshot (`debian:trixie-YYYYMMDD`),
+not the floating `trixie`. A daily workflow
+([`base-bump.yaml`](.github/workflows/base-bump.yaml)) resolves Debian's newest
+`trixie-YYYYMMDD` tag, rewrites the pin, and commits; that commit triggers a
+rebuild. Reproducible rebuilds, still tracking upstream snapshots.
+
+Setup: the bump must commit with a PAT so its push triggers the build workflow
+(a push made with the default `GITHUB_TOKEN` cannot). Create a fine-grained PAT
+with Contents: read/write on this repo and store it as the `BASE_BUMP_TOKEN`
+secret.
+
 ## What's in the base
 
 - **Init:** systemd as PID 1 (`ENTRYPOINT /sbin/init`), so services run

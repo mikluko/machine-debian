@@ -1,0 +1,54 @@
+name: base-bump
+
+# Daily: pin the base image to Debian's newest trixie-YYYYMMDD snapshot tag,
+# so rebuilds are reproducible and track the latest published snapshot.
+#
+# Pushes with a PAT (secret BASE_BUMP_TOKEN) so the resulting commit triggers
+# the build workflow. A push made with the default GITHUB_TOKEN would NOT
+# trigger other workflows. Create a fine-grained PAT with Contents: read/write
+# on this repo and store it as BASE_BUMP_TOKEN.
+
+on:
+  schedule:
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          token: ${{ secrets.BASE_BUMP_TOKEN }}
+
+      - name: Resolve newest trixie date tag
+        id: tag
+        run: |
+          # library/debian on Docker Hub. Keep only exact trixie-YYYYMMDD tags
+          # (excludes trixie, trixie-slim, trixie-YYYYMMDD-slim), newest wins.
+          tag=$(curl -fsSL 'https://hub.docker.com/v2/repositories/library/debian/tags?page_size=100&name=trixie-' \
+            | jq -r '.results[].name | select(test("^trixie-[0-9]{8}$"))' \
+            | sort | tail -1)
+          if [ -z "$tag" ]; then
+            echo "::error::no trixie-YYYYMMDD tag found"; exit 1
+          fi
+          echo "tag=$tag" >>"$GITHUB_OUTPUT"
+
+      - name: Pin Dockerfile FROM
+        run: |
+          sed -i -E "s|^FROM debian:trixie(-[0-9]{8})?|FROM debian:${{ steps.tag.outputs.tag }}|" Dockerfile
+          git diff -- Dockerfile
+
+      - name: Commit if changed
+        run: |
+          if git diff --quiet -- Dockerfile; then
+            echo "already pinned to ${{ steps.tag.outputs.tag }}"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -am "Pin base to debian:${{ steps.tag.outputs.tag }}"
+          git push
