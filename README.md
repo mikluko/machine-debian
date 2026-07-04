@@ -7,9 +7,8 @@ project-specific machine from the result.
 
 Published as `ghcr.io/mikluko/machine-debian`.
 
-This repo is also a **Claude Code plugin** (and its own marketplace) shipping the
-`apple-container` skill — the working knowledge behind this project (see
-[Claude plugin](#claude-plugin)).
+This repo is also a **Claude Code plugin** shipping the `apple-container` skill —
+the working knowledge behind this project (see [Claude plugin](#claude-plugin)).
 
 ## Requirements
 
@@ -186,15 +185,15 @@ A project needing several overlays composes them in its own Dockerfile: start
 
 ## Claude plugin
 
-The repo doubles as a Claude Code plugin (and its own marketplace) that ships
-the `apple-container` skill: the accumulated working knowledge of `container
-machine` (the gotchas around home mounts, rootless storage, SSH-agent
-forwarding, and systemd/Docker inside the VM). Install it:
+This repo is a Claude Code plugin shipping the `apple-container` skill: the
+accumulated working knowledge of `container machine` (the gotchas around home
+mounts, rootless storage, SSH-agent forwarding, and systemd/Docker inside the
+VM). It is published through the [`mikluko/claude`](https://github.com/mikluko/claude)
+marketplace:
 
 ```
-/plugin marketplace add mikluko/machine-debian
-/plugin install machine-debian@machine-debian
+/plugin marketplace add mikluko/claude
+/plugin install machine-debian@mikluko
 ```
 
-Plugin layout: `.claude-plugin/plugin.json` (manifest),
-`.claude-plugin/marketplace.json` (listing), `skills/apple-container/`.
+Plugin layout: `.claude-plugin/plugin.json` (manifest), `skills/apple-container/`.

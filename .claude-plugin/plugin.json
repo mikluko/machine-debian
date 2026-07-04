@@ -1,0 +1,11 @@
+{
+  "name": "machine-debian",
+  "description": "Apple `container` machine tooling: the machine-debian base image + overlays workflow, and the apple-container skill covering macOS containerization gotchas.",
+  "author": {
+    "name": "Mikhail Lukianchenko",
+    "url": "https://github.com/mikluko"
+  },
+  "homepage": "https://github.com/mikluko/machine-debian",
+  "repository": "https://github.com/mikluko/machine-debian",
+  "keywords": ["apple-container", "macos", "containerization", "debian"]
+}
