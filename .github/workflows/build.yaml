@@ -1,0 +1,69 @@
+name: build
+
+# Builds the arm64 base image and its overlays, pushes to GHCR.
+# arm64 only: these images boot Apple `container` machines on Apple Silicon.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - Dockerfile
+      - "*.Dockerfile"
+      - .github/workflows/build.yaml
+  schedule:
+    # Weekly rebuild to pick up Debian security updates.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}
+
+jobs:
+  base:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  overlays:
+    # Overlays are FROM the base image, so it must be pushed first.
+    needs: base
+    runs-on: ubuntu-24.04-arm
+    strategy:
+      matrix:
+        overlay: [kind, jdk25]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.overlay }}.Dockerfile
+          platforms: linux/arm64
+          push: true
+          tags: ${{ env.IMAGE }}:${{ matrix.overlay }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
