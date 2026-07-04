@@ -1,6 +1,6 @@
 # kind (Kubernetes-in-Docker) + Podman overlay on the base machine image.
 #
-# Build:  container build -t <name>-machine -f kind.Dockerfile .
+# Build:  container build -t machine-<name> -f kind.Dockerfile .
 #
 # Podman is kind's container provider here (KIND_EXPERIMENTAL_PROVIDER=podman),
 # so no Docker daemon is required.

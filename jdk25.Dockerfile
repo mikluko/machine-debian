@@ -1,6 +1,6 @@
 # OpenJDK 25 (headless) + Maven + Docker overlay on the base machine image.
 #
-# Build:  container build -t <name>-machine -f jdk25.Dockerfile .
+# Build:  container build -t machine-<name> -f jdk25.Dockerfile .
 #
 # JDK 25 comes from Debian trixie-security; no external apt repo needed.
 # Docker Engine is enabled as a systemd service and auto-starts on boot.

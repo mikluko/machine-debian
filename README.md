@@ -60,8 +60,8 @@ Run from the project directory (the one with the `FROM
 ghcr.io/mikluko/machine-debian` Dockerfile). Replace `myproject`.
 
 ```bash
-container build -t myproject-machine .
-container machine create myproject-machine --name myproject --cpus 6 --memory 16G
+container build -t machine-myproject .
+container machine create machine-myproject --name myproject --cpus 6 --memory 16G
 ```
 
 `create` boots the machine. Confirm:
@@ -85,10 +85,10 @@ container machine run -n myproject --root -- <cmd> [args] # one-off command
 Machines cannot hot-swap their image, so re-create:
 
 ```bash
-container build -t myproject-machine .          # rebuild (pull fresh base first if needed)
+container build -t machine-myproject .          # rebuild (pull fresh base first if needed)
 container machine stop myproject
 container machine delete myproject
-container machine create myproject-machine --name myproject --cpus 6 --memory 16G
+container machine create machine-myproject --name myproject --cpus 6 --memory 16G
 ```
 
 To also pick up a newer base image, pull it before rebuilding:
@@ -102,7 +102,7 @@ container image pull ghcr.io/mikluko/machine-debian
 ```bash
 container machine stop myproject
 container machine delete myproject
-container image delete myproject-machine    # optional: drop the local image too
+container image delete machine-myproject    # optional: drop the local image too
 ```
 
 ## Gotchas
@@ -133,8 +133,8 @@ ghcr.io/mikluko/machine-debian` and inherits the base init/entrypoint. Build one
 with `-f`, then create a machine from the tag:
 
 ```bash
-container build -t myproject-machine -f kind.Dockerfile .
-container machine create myproject-machine --name myproject --cpus 6 --memory 16G
+container build -t machine-myproject -f kind.Dockerfile .
+container machine create machine-myproject --name myproject --cpus 6 --memory 16G
 ```
 
 - [`kind.Dockerfile`](kind.Dockerfile) — `kind` + Podman as its container
