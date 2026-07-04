@@ -27,6 +27,9 @@ permissions:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
+  # Deterministic version tag EPOCH.BUILD. BUILD is GHA's sequential run
+  # counter; bump EPOCH by hand on a breaking base change.
+  EPOCH: "0"
 
 jobs:
   base:
@@ -45,7 +48,9 @@ jobs:
           file: Dockerfile
           platforms: linux/arm64
           push: true
-          tags: ${{ env.IMAGE }}:latest
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ env.EPOCH }}.${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -70,6 +75,8 @@ jobs:
           file: ${{ matrix.overlay }}.Dockerfile
           platforms: linux/arm64
           push: true
-          tags: ${{ env.IMAGE }}:${{ matrix.overlay }}
+          tags: |
+            ${{ env.IMAGE }}:${{ matrix.overlay }}
+            ${{ env.IMAGE }}:${{ matrix.overlay }}-${{ env.EPOCH }}.${{ github.run_number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

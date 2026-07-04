@@ -13,6 +13,16 @@ Published as `ghcr.io/mikluko/machine-debian`.
 - Apple's `container` CLI, v1.0+ (`container --version`).
 - **arm64 only.** The image is built and published for arm64.
 
+## Tags
+
+Every build publishes a moving tag and an immutable version `EPOCH.BUILD`.
+`BUILD` is the CI run number; `EPOCH` starts at `0` and is bumped by hand on a
+breaking base change. Pin the version for reproducibility.
+
+- base: `latest`, `0.<build>`
+- kind: `kind`, `kind-0.<build>`
+- jdk25: `jdk25`, `jdk25-0.<build>`
+
 ## What's in the base
 
 - **Init:** systemd as PID 1 (`ENTRYPOINT /sbin/init`), so services run
