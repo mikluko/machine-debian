@@ -39,6 +39,8 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: main
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
         with:
@@ -66,6 +68,8 @@ jobs:
         overlay: [kind, jdk25]
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: main
       - uses: docker/setup-buildx-action@v4
       - uses: docker/login-action@v4
         with:
