@@ -3,9 +3,9 @@ name: update
 # Daily: pin the base image to Debian's newest trixie-YYYYMMDD snapshot tag,
 # so rebuilds are reproducible and track the latest published snapshot.
 #
-# The commit is pushed with a PAT (secret GH_PAT) so it triggers the build
+# The commit is pushed with a PAT (secret UPDATE_WORKFLOW_PAT) so it triggers the build
 # workflow's `on: push`; a push made with the default GITHUB_TOKEN cannot.
-# GH_PAT is a fine-grained PAT with Contents: read/write on this repo.
+# UPDATE_WORKFLOW_PAT is a fine-grained PAT with Contents: read/write on this repo.
 # (Secret names may not start with the reserved GITHUB_ prefix.)
 
 on:
@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          token: ${{ secrets.GH_PAT }}
+          token: ${{ secrets.UPDATE_WORKFLOW_PAT }}
 
       - name: Resolve newest trixie date tag
         id: tag

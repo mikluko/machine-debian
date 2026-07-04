@@ -34,9 +34,8 @@ commit triggers the build, so rebuilds happen only on a new snapshot, not daily.
 
 Setup: the update commits with a PAT so its push triggers the build workflow (a
 push made with the default `GITHUB_TOKEN` cannot). Create a fine-grained PAT
-with Contents: read/write on this repo and store it as the `GH_PAT` secret.
-Secret names may not start with the reserved `GITHUB_` prefix, so `GH_PAT`, not
-`GITHUB_PAT`.
+with Contents: read/write on this repo and store it as the `UPDATE_WORKFLOW_PAT`
+secret.
 
 ## What's in the base
 
