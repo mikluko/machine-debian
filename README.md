@@ -188,11 +188,12 @@ A project needing several overlays composes them in its own Dockerfile: start
 This repo is a Claude Code plugin shipping the `apple-container` skill: the
 accumulated working knowledge of `container machine` (the gotchas around home
 mounts, rootless storage, SSH-agent forwarding, and systemd/Docker inside the
-VM). It is published through the [`mikluko/claude`](https://github.com/mikluko/claude)
+VM). It is published through the
+[`mikluko/marketplace-claude`](https://github.com/mikluko/marketplace-claude)
 marketplace:
 
 ```
-/plugin marketplace add mikluko/claude
+/plugin marketplace add mikluko/marketplace-claude
 /plugin install machine-debian@mikluko
 ```
 
