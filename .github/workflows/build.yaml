@@ -51,8 +51,8 @@ jobs:
           tags: |
             ${{ env.BASE }}:latest
             ${{ env.BASE }}:${{ env.EPOCH }}.${{ github.run_number }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=base
+          cache-to: type=gha,mode=max,scope=base
 
   overlays:
     # Overlays are FROM the base image, so it must be pushed first.
@@ -78,5 +78,5 @@ jobs:
           tags: |
             ${{ env.BASE }}/${{ matrix.overlay }}:latest
             ${{ env.BASE }}/${{ matrix.overlay }}:${{ env.EPOCH }}.${{ github.run_number }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.overlay }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.overlay }}
