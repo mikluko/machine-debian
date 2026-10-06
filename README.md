@@ -26,6 +26,7 @@ base change. Pin the version for reproducibility.
 - base: `ghcr.io/mikluko/machine-debian` — `latest`, `0.<build>`
 - kind: `ghcr.io/mikluko/machine-debian/kind` — `latest`, `0.<build>`
 - jdk25: `ghcr.io/mikluko/machine-debian/jdk25` — `latest`, `0.<build>`
+- podman: `ghcr.io/mikluko/machine-debian/podman` — `latest`, `0.<build>`
 
 ## Base pinning
 
@@ -176,6 +177,12 @@ publishes it as its own GHCR sub-package (see [Tags](#tags)).
   (`KIND_EXPERIMENTAL_PROVIDER=podman`).
 - [`jdk25.Dockerfile`](jdk25.Dockerfile) → `ghcr.io/mikluko/machine-debian/jdk25`
   — OpenJDK 25 (headless) + Maven (from Debian trixie-security) + Docker Engine.
+- [`podman.Dockerfile`](podman.Dockerfile) → `ghcr.io/mikluko/machine-debian/podman`
+  — rootful Podman serving the Docker-compatible API on port 2375, for a host
+  client that speaks to Docker, such as an IDE's Docker interpreter, at
+  `tcp://<name>.machine:2375`. A machine publishes no ports and changes address
+  on every boot, so the client goes by name, which resolves once
+  `sudo container system dns create machine` has run. Unauthenticated, as root.
 
 Create a machine straight from a published overlay, no local build:
 
