@@ -47,6 +47,9 @@ secret.
 - **Languages:** Go, Node.js + npm.
 - **Toolchain:** `build-essential`, Git, OpenSSH client, `sudo`,
   `ca-certificates`.
+- **DNS:** a local unbound on `127.0.0.1`, forwarding over DNS-over-TLS to
+  `1.1.1.1` and `9.9.9.10`, is the machine's only resolver; the vmnet gateway
+  the machine is handed at boot is not used.
 
 No container runtime is baked into the base. Everything beyond this baseline,
 including Docker or Podman, is a per-project or shared overlay (see
